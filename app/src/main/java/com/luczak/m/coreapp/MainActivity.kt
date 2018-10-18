@@ -6,7 +6,9 @@ import android.support.v4.app.FragmentManager
 import com.luczak.m.coreapp.interaction.ActivityInteractions
 import com.luczak.m.coreapp.interaction.TopBarInteraction
 import com.luczak.m.coreapp.utils.BaseFragment
-import com.luczak.m.coreapp.view.ItemListFragment
+import com.luczak.m.coreapp.utils.Rest
+import com.luczak.m.coreapp.view.MainFragment
+import com.raizlabs.android.dbflow.config.FlowManager
 
 class MainActivity : AppCompatActivity(), ActivityInteractions, FragmentManager.OnBackStackChangedListener {
 
@@ -14,15 +16,16 @@ class MainActivity : AppCompatActivity(), ActivityInteractions, FragmentManager.
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        FlowManager.init(this)
         setContentView(R.layout.activity_main)
         if (savedInstanceState == null) {
-            navigateTo(ItemListFragment.newInstance(), false)
+            navigateTo(MainFragment.newInstance(), false)
         }
 
         val fragmentManager = supportFragmentManager
         topBar = fragmentManager.findFragmentById(R.id.top_fragment) as TopBarInteraction
         fragmentManager.addOnBackStackChangedListener(this)
-
+        Rest.init()
     }
 
     override fun navigateTo(fragment: BaseFragment, addToBackstack: Boolean): Boolean {
