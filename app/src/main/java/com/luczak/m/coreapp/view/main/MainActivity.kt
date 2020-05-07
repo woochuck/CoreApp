@@ -1,31 +1,33 @@
-package com.luczak.m.coreapp
+package com.luczak.m.coreapp.view.main
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.support.v4.app.FragmentManager
+import com.luczak.m.coreapp.R
+import com.luczak.m.coreapp.injection.ActivityModule
+import com.luczak.m.coreapp.injection.DaggerActivityComponent
 import com.luczak.m.coreapp.interaction.ActivityInteractions
-import com.luczak.m.coreapp.interaction.TopBarInteraction
 import com.luczak.m.coreapp.utils.BaseFragment
-import com.luczak.m.coreapp.utils.Rest
-import com.luczak.m.coreapp.view.MainFragment
+import com.luczak.m.coreapp.view.posts.PostListFragment
 import com.raizlabs.android.dbflow.config.FlowManager
+import javax.inject.Inject
 
-class MainActivity : AppCompatActivity(), ActivityInteractions, FragmentManager.OnBackStackChangedListener {
-
-    lateinit var topBar: TopBarInteraction
+class MainActivity : AppCompatActivity(), MainMvpView, ActivityInteractions {
+    @Inject
+    lateinit var presenter: MainPresenter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        FlowManager.init(this)
         setContentView(R.layout.activity_main)
-        if (savedInstanceState == null) {
-            navigateTo(MainFragment.newInstance(), false)
-        }
+        injectDependency()
 
-        val fragmentManager = supportFragmentManager
-        topBar = fragmentManager.findFragmentById(R.id.top_fragment) as TopBarInteraction
-        fragmentManager.addOnBackStackChangedListener(this)
-        Rest.init()
+        presenter.attach(this)
+    }
+
+    override fun showPostListFragment() {
+        supportFragmentManager.beginTransaction()
+                .disallowAddToBackStack()
+                .replace(R.id.activity_content, PostListFragment().newInstance(), "PostListFragment")
+                .commit()
     }
 
     override fun navigateTo(fragment: BaseFragment, addToBackstack: Boolean): Boolean {
@@ -51,20 +53,11 @@ class MainActivity : AppCompatActivity(), ActivityInteractions, FragmentManager.
         return true
     }
 
-    override fun onBackStackChanged() {
+    private fun injectDependency() {
+        val activityComponent = DaggerActivityComponent.builder()
+                .activityModule(ActivityModule(this))
+                .build()
 
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-    }
-
-    override fun navigateBack(): Boolean {
-        onBackPressed()
-        return false
-    }
-
-    override fun topBar(): TopBarInteraction {
-        return topBar
+        activityComponent.inject(this)
     }
 }

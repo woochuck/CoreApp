@@ -1,13 +1,12 @@
 package com.luczak.m.coreapp.model;
 
 import com.google.gson.annotations.SerializedName;
-import com.luczak.m.coreapp.database.Db;
 import com.raizlabs.android.dbflow.annotation.Column;
 import com.raizlabs.android.dbflow.annotation.PrimaryKey;
 import com.raizlabs.android.dbflow.annotation.Table;
 import com.raizlabs.android.dbflow.structure.BaseModel;
 
-@Table(database = Db.class)
+//@Table(database = Db.class)
 public class Comment extends BaseModel {
 
     @Column

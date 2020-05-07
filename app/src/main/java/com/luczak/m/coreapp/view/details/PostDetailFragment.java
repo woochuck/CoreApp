@@ -1,7 +1,5 @@
-package com.luczak.m.coreapp.view;
+package com.luczak.m.coreapp.view.details;
 
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
@@ -16,22 +14,20 @@ import android.widget.TextView;
 import com.inverce.mod.core.IM;
 import com.luczak.m.coreapp.R;
 import com.luczak.m.coreapp.adapter.CommentAdapter;
-import com.luczak.m.coreapp.model.Comment;
-import com.luczak.m.coreapp.model.Comment_Table;
+import com.luczak.m.coreapp.injection.DaggerFragmentComponent;
+import com.luczak.m.coreapp.injection.FragmentComponent;
+import com.luczak.m.coreapp.injection.FragmentModule;
 import com.luczak.m.coreapp.model.Post;
-import com.luczak.m.coreapp.model.Post_Table;
 import com.luczak.m.coreapp.model.User;
 import com.luczak.m.coreapp.utils.BaseFragment;
-import com.luczak.m.coreapp.utils.Rest;
-import com.raizlabs.android.dbflow.sql.language.SQLite;
+import com.luczak.m.coreapp.utils.DataManager;
 
-import java.util.List;
+import javax.inject.Inject;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+public class PostDetailFragment extends BaseFragment implements PostDetailMvpView {
+    @Inject
+    PostDetailPresenter presenter;
 
-public class PostDetailFragment extends BaseFragment {
     private static final String SAVED_BUNDLE_TAG = "SAVED_BUNDLE_TAG";
 
     private final static String POST_ID = "POST_ID";
@@ -76,8 +72,11 @@ public class PostDetailFragment extends BaseFragment {
         if (getArguments() != null) {
             postId = this.getArguments().getInt(POST_ID);
             userId = this.getArguments().getInt(USER_ID);
-            singlePost = SQLite.select().from(Post.class).where(Post_Table.id.eq(postId)).querySingle();
+            //get post data here
+            //singlePost =
         }
+        injectDepedency();
+        presenter.attach(this);
     }
 
     @Nullable
@@ -85,46 +84,51 @@ public class PostDetailFragment extends BaseFragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_post_detail, container, false);
         assert getActions() != null;
-        getActions().topBar().setTitle(R.string.details);
         findViews(view);
-        getUser();
-        setData();
+
         if (savedInstanceState != null) {
             setRetainInstance(true);
+        } else {
+            presenter.loadData(userId);
         }
-
         return view;
     }
 
-    private void setData() {
-        setCommentRecycler(singlePost.getId());
-        title.setText(singlePost.getTitle());
-        description.setText(singlePost.getBody());
+    private void injectDepedency() {
+         FragmentComponent postDetailComponent = DaggerFragmentComponent.builder()
+                .fragmentModule(new FragmentModule())
+                .build();
+
+        postDetailComponent.inject(this);
     }
 
-    private void getUser() {
-        Rest.getRest().user(userId).enqueue(new Callback<User>() {
-            @Override
-            public void onResponse(Call<User> call, Response<User> response) {
-                if (response.isSuccessful()) {
-                    if (response.body() != null) {
-                        name.setText(String.format("%s%s", IM.resources().getString(R.string.author), response.body().getEmail().toUpperCase()));
-                    }
-                }
-            }
+    @Override
+    public void showProgress(boolean show) {
 
-            @Override
-            public void onFailure(Call<User> call, Throwable t) {
+    }
 
-            }
-        });
+    @Override
+    public void setAuthorData(@NonNull User user) {
+        title.setText(user.getName() + " " +user.getUsername());
+        description.setText(user.component1());
+    }
+
+    @Override
+    public void setComments() {
+
+    }
+
+    private void setData() {
+        //setCommentRecycler(singlePost.getId());
+        //title.setText(singlePost.getTitle());
+       // description.setText(singlePost.getBody());
     }
 
     private void setCommentRecycler(int id) {
-        List<Comment> postComment = SQLite.select().from(Comment.class).where(Comment_Table.postId.eq(id)).queryList();
-        comments.setLayoutManager(new LinearLayoutManager(IM.context()));
-        adapter = new CommentAdapter(postComment);
-        comments.setAdapter(adapter);
+     //   List<Comment> postComment = SQLite.select().from(Comment.class).where(Comment_Table.postId.eq(id)).queryList();
+//        comments.setLayoutManager(new LinearLayoutManager(IM.context()));
+//        adapter = new CommentAdapter(postComment);
+//        comments.setAdapter(adapter);
     }
 
     private void findViews(View view) {
