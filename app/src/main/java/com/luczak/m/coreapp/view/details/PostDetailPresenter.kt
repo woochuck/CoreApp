@@ -24,8 +24,8 @@ class PostDetailPresenter : BasePresenter<PostDetailMvpView> {
         this.view = view
     }
 
-    fun loadData(userId: Int) {
-        val subscribe = api.getUserDetails(userId)
+    fun loadData(userId: Int, postId: Int) {
+        val userSubscribe = api.getUserDetails(userId)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
@@ -33,9 +33,21 @@ class PostDetailPresenter : BasePresenter<PostDetailMvpView> {
                     view.setAuthorData(it)
                 }, { error ->
                     view.showProgress(false)
-                    Log.e("PostDetailPresenter", error.message)
+                    Log.e("userSubscribe", error.message)
                 })
-        subscriptions.add(subscribe)
+        subscriptions.add(userSubscribe)
+        val postSubscribe = api.getPostDetail(postId)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+                    view.showProgress(true)
+                    view.setPostDetails(it)
+                }, {
+                    error ->
+                    view.showProgress(false)
+                    Log.e("postSubscribe", error.message)
+                })
+        subscriptions.add(postSubscribe)
     }
 
 }

@@ -17,10 +17,15 @@ import com.luczak.m.coreapp.adapter.CommentAdapter;
 import com.luczak.m.coreapp.injection.DaggerFragmentComponent;
 import com.luczak.m.coreapp.injection.FragmentComponent;
 import com.luczak.m.coreapp.injection.FragmentModule;
+import com.luczak.m.coreapp.model.Comment;
 import com.luczak.m.coreapp.model.Post;
 import com.luczak.m.coreapp.model.User;
 import com.luczak.m.coreapp.utils.BaseFragment;
 import com.luczak.m.coreapp.utils.DataManager;
+
+import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -72,8 +77,6 @@ public class PostDetailFragment extends BaseFragment implements PostDetailMvpVie
         if (getArguments() != null) {
             postId = this.getArguments().getInt(POST_ID);
             userId = this.getArguments().getInt(USER_ID);
-            //get post data here
-            //singlePost =
         }
         injectDepedency();
         presenter.attach(this);
@@ -89,7 +92,7 @@ public class PostDetailFragment extends BaseFragment implements PostDetailMvpVie
         if (savedInstanceState != null) {
             setRetainInstance(true);
         } else {
-            presenter.loadData(userId);
+            presenter.loadData(userId, postId);
         }
         return view;
     }
@@ -109,13 +112,22 @@ public class PostDetailFragment extends BaseFragment implements PostDetailMvpVie
 
     @Override
     public void setAuthorData(@NonNull User user) {
-        title.setText(user.getName() + " " +user.getUsername());
-        description.setText(user.component1());
+        String fullName = user.getName() + " " +user.getUsername();
+        name.setText(fullName);
     }
 
     @Override
-    public void setComments() {
+    public void setComments(@NotNull Post post) {
+//        List<Comment> postComment = post.
+//        comments.setLayoutManager(new LinearLayoutManager(IM.context()));
+//        adapter = new CommentAdapter(postComment);
+//        comments.setAdapter(adapter);
+    }
 
+    @Override
+    public void setPostDetails(@NotNull Post post) {
+        title.setText(post.getTitle());
+        description.setText(post.getBody());
     }
 
     private void setData() {
