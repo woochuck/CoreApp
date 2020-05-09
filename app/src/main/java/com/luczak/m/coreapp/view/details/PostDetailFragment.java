@@ -1,7 +1,5 @@
-package com.luczak.m.coreapp.view;
+package com.luczak.m.coreapp.view.details;
 
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
@@ -11,36 +9,40 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.inverce.mod.core.IM;
 import com.luczak.m.coreapp.R;
 import com.luczak.m.coreapp.adapter.CommentAdapter;
+import com.luczak.m.coreapp.injection.DaggerFragmentComponent;
+import com.luczak.m.coreapp.injection.FragmentComponent;
+import com.luczak.m.coreapp.injection.FragmentModule;
 import com.luczak.m.coreapp.model.Comment;
-import com.luczak.m.coreapp.model.Comment_Table;
 import com.luczak.m.coreapp.model.Post;
-import com.luczak.m.coreapp.model.Post_Table;
 import com.luczak.m.coreapp.model.User;
-import com.luczak.m.coreapp.utils.BaseFragment;
-import com.luczak.m.coreapp.utils.Rest;
-import com.raizlabs.android.dbflow.sql.language.SQLite;
+import com.luczak.m.coreapp.view.base.BaseFragment;
 
-import java.util.List;
+import org.jetbrains.annotations.NotNull;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import java.util.ArrayList;
 
-public class PostDetailFragment extends BaseFragment {
+import javax.inject.Inject;
+
+//TODO restore properly it
+public class PostDetailFragment extends BaseFragment implements PostDetailMvpView {
+    @Inject
+    PostDetailPresenter presenter;
+
     private static final String SAVED_BUNDLE_TAG = "SAVED_BUNDLE_TAG";
 
     private final static String POST_ID = "POST_ID";
     private final static String USER_ID = "USER_ID";
 
     private int userId, postId;
-    private Post singlePost;
     TextView title, name, description;
     RecyclerView comments;
+    ProgressBar progressBar;
     CommentAdapter adapter;
     private Parcelable recyclerViewState;
     private RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(IM.context());
@@ -76,8 +78,9 @@ public class PostDetailFragment extends BaseFragment {
         if (getArguments() != null) {
             postId = this.getArguments().getInt(POST_ID);
             userId = this.getArguments().getInt(USER_ID);
-            singlePost = SQLite.select().from(Post.class).where(Post_Table.id.eq(postId)).querySingle();
         }
+        injectDepedency();
+        presenter.attach(this);
     }
 
     @Nullable
@@ -85,46 +88,50 @@ public class PostDetailFragment extends BaseFragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_post_detail, container, false);
         assert getActions() != null;
-        getActions().topBar().setTitle(R.string.details);
         findViews(view);
-        getUser();
-        setData();
+
         if (savedInstanceState != null) {
             setRetainInstance(true);
+        } else {
+            presenter.loadData(userId, postId);
         }
-
         return view;
     }
 
-    private void setData() {
-        setCommentRecycler(singlePost.getId());
-        title.setText(singlePost.getTitle());
-        description.setText(singlePost.getBody());
+    private void injectDepedency() {
+         FragmentComponent postDetailComponent = DaggerFragmentComponent.builder()
+                .fragmentModule(new FragmentModule())
+                .build();
+
+        postDetailComponent.inject(this);
     }
 
-    private void getUser() {
-        Rest.getRest().user(userId).enqueue(new Callback<User>() {
-            @Override
-            public void onResponse(Call<User> call, Response<User> response) {
-                if (response.isSuccessful()) {
-                    if (response.body() != null) {
-                        name.setText(String.format("%s%s", IM.resources().getString(R.string.author), response.body().getEmail().toUpperCase()));
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(Call<User> call, Throwable t) {
-
-            }
-        });
+    @Override
+    public void showProgress(boolean show) {
+        if (show) {
+            progressBar.setVisibility(View.VISIBLE);
+        } else {
+            progressBar.setVisibility(View.GONE);
+        }
     }
 
-    private void setCommentRecycler(int id) {
-        List<Comment> postComment = SQLite.select().from(Comment.class).where(Comment_Table.postId.eq(id)).queryList();
-        comments.setLayoutManager(new LinearLayoutManager(IM.context()));
-        adapter = new CommentAdapter(postComment);
+    @Override
+    public void setAuthorData(@NonNull User user) {
+        String fullName = user.getName() + " " + user.getUsername();
+        name.setText(fullName);
+    }
+
+    @Override
+    public void setComments(@NotNull ArrayList<Comment> commentList) {
+        comments.setLayoutManager(new LinearLayoutManager(getContext()));
+        adapter = new CommentAdapter(commentList);
         comments.setAdapter(adapter);
+    }
+
+    @Override
+    public void setPostDetails(@NotNull Post post) {
+        title.setText(post.getTitle());
+        description.setText(post.getBody());
     }
 
     private void findViews(View view) {
@@ -132,5 +139,6 @@ public class PostDetailFragment extends BaseFragment {
         description = view.findViewById(R.id.tv_desc);
         name = view.findViewById(R.id.tv_author);
         comments = view.findViewById(R.id.recycler_comments);
+        progressBar = view.findViewById(R.id.progressBar);
     }
 }
