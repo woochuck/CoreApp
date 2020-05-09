@@ -1,16 +1,15 @@
 package com.luczak.m.coreapp.view.main
 
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
 import com.luczak.m.coreapp.R
 import com.luczak.m.coreapp.injection.ActivityModule
 import com.luczak.m.coreapp.injection.DaggerActivityComponent
 import com.luczak.m.coreapp.interaction.ActivityInteractions
-import com.luczak.m.coreapp.utils.BaseFragment
+import com.luczak.m.coreapp.view.base.BaseFragment
 import com.luczak.m.coreapp.view.posts.PostListFragment
-import com.raizlabs.android.dbflow.config.FlowManager
 import javax.inject.Inject
-
+//TODO add some animations for loading fragment items
 class MainActivity : AppCompatActivity(), MainMvpView, ActivityInteractions {
     @Inject
     lateinit var presenter: MainPresenter
@@ -24,10 +23,7 @@ class MainActivity : AppCompatActivity(), MainMvpView, ActivityInteractions {
     }
 
     override fun showPostListFragment() {
-        supportFragmentManager.beginTransaction()
-                .disallowAddToBackStack()
-                .replace(R.id.activity_content, PostListFragment().newInstance(), "PostListFragment")
-                .commit()
+        navigateTo(PostListFragment().newInstance(), false)
     }
 
     override fun navigateTo(fragment: BaseFragment, addToBackstack: Boolean): Boolean {
@@ -59,5 +55,14 @@ class MainActivity : AppCompatActivity(), MainMvpView, ActivityInteractions {
                 .build()
 
         activityComponent.inject(this)
+    }
+
+    override fun onBackPressed() {
+        val count = supportFragmentManager.backStackEntryCount
+        if (count == 0) {
+            super.onBackPressed()
+        } else {
+            supportFragmentManager.popBackStack()
+        }
     }
 }

@@ -1,7 +1,6 @@
 package com.luczak.m.coreapp.view.posts
 
 import android.os.Bundle
-import android.support.v4.app.Fragment
 import android.support.v7.widget.LinearLayoutManager
 import android.view.LayoutInflater
 import android.view.View
@@ -11,11 +10,12 @@ import com.luczak.m.coreapp.adapter.ListPostAdapter
 import com.luczak.m.coreapp.injection.DaggerFragmentComponent
 import com.luczak.m.coreapp.injection.FragmentModule
 import com.luczak.m.coreapp.model.Post
+import com.luczak.m.coreapp.view.base.BaseFragment
 import com.luczak.m.coreapp.view.details.PostDetailFragment
 import kotlinx.android.synthetic.main.fragment_post_list.*
 import javax.inject.Inject
 
-class PostListFragment: Fragment(), PostsMvpView, ListPostAdapter.OnItemClick {
+class PostListFragment: BaseFragment(), PostsMvpView, ListPostAdapter.OnItemClick {
     @Inject lateinit var presenter: PostListPresenter
 
     fun newInstance(): PostListFragment {
@@ -44,11 +44,15 @@ class PostListFragment: Fragment(), PostsMvpView, ListPostAdapter.OnItemClick {
     }
 
     override fun showProgress(show: Boolean) {
-
+        if (show) {
+            progressBar.visibility = View.VISIBLE
+        } else {
+            progressBar.visibility = View.GONE
+        }
     }
 
     override fun loadDataSuccess(list: List<Post>) {
-        val adapter = ListPostAdapter(activity, list, this)
+        val adapter = ListPostAdapter(activity, list.toMutableList(), this)
         list_recycler.layoutManager = LinearLayoutManager(activity)
         list_recycler.adapter = adapter
     }
@@ -66,10 +70,6 @@ class PostListFragment: Fragment(), PostsMvpView, ListPostAdapter.OnItemClick {
     }
 
     override fun itemClick(userId: Int, postId: Int) {
-        //set interfave to use navigateTo()
-        fragmentManager!!.beginTransaction()
-                .disallowAddToBackStack()
-                .replace(R.id.activity_content, PostDetailFragment.newInstance(userId, postId), "PostDetailFragment")
-                .commit()
+        actions?.navigateTo(PostDetailFragment.newInstance(userId, postId), true)
     }
 }

@@ -9,6 +9,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.inverce.mod.core.IM;
@@ -20,15 +21,15 @@ import com.luczak.m.coreapp.injection.FragmentModule;
 import com.luczak.m.coreapp.model.Comment;
 import com.luczak.m.coreapp.model.Post;
 import com.luczak.m.coreapp.model.User;
-import com.luczak.m.coreapp.utils.BaseFragment;
-import com.luczak.m.coreapp.utils.DataManager;
+import com.luczak.m.coreapp.view.base.BaseFragment;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
+import java.util.ArrayList;
 
 import javax.inject.Inject;
 
+//TODO restore properly it
 public class PostDetailFragment extends BaseFragment implements PostDetailMvpView {
     @Inject
     PostDetailPresenter presenter;
@@ -39,9 +40,9 @@ public class PostDetailFragment extends BaseFragment implements PostDetailMvpVie
     private final static String USER_ID = "USER_ID";
 
     private int userId, postId;
-    private Post singlePost;
     TextView title, name, description;
     RecyclerView comments;
+    ProgressBar progressBar;
     CommentAdapter adapter;
     private Parcelable recyclerViewState;
     private RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(IM.context());
@@ -107,21 +108,24 @@ public class PostDetailFragment extends BaseFragment implements PostDetailMvpVie
 
     @Override
     public void showProgress(boolean show) {
-
+        if (show) {
+            progressBar.setVisibility(View.VISIBLE);
+        } else {
+            progressBar.setVisibility(View.GONE);
+        }
     }
 
     @Override
     public void setAuthorData(@NonNull User user) {
-        String fullName = user.getName() + " " +user.getUsername();
+        String fullName = user.getName() + " " + user.getUsername();
         name.setText(fullName);
     }
 
     @Override
-    public void setComments(@NotNull Post post) {
-//        List<Comment> postComment = post.
-//        comments.setLayoutManager(new LinearLayoutManager(IM.context()));
-//        adapter = new CommentAdapter(postComment);
-//        comments.setAdapter(adapter);
+    public void setComments(@NotNull ArrayList<Comment> commentList) {
+        comments.setLayoutManager(new LinearLayoutManager(getContext()));
+        adapter = new CommentAdapter(commentList);
+        comments.setAdapter(adapter);
     }
 
     @Override
@@ -130,23 +134,11 @@ public class PostDetailFragment extends BaseFragment implements PostDetailMvpVie
         description.setText(post.getBody());
     }
 
-    private void setData() {
-        //setCommentRecycler(singlePost.getId());
-        //title.setText(singlePost.getTitle());
-       // description.setText(singlePost.getBody());
-    }
-
-    private void setCommentRecycler(int id) {
-     //   List<Comment> postComment = SQLite.select().from(Comment.class).where(Comment_Table.postId.eq(id)).queryList();
-//        comments.setLayoutManager(new LinearLayoutManager(IM.context()));
-//        adapter = new CommentAdapter(postComment);
-//        comments.setAdapter(adapter);
-    }
-
     private void findViews(View view) {
         title = view.findViewById(R.id.tv_title_detail);
         description = view.findViewById(R.id.tv_desc);
         name = view.findViewById(R.id.tv_author);
         comments = view.findViewById(R.id.recycler_comments);
+        progressBar = view.findViewById(R.id.progressBar);
     }
 }

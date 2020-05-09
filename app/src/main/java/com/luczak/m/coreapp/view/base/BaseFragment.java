@@ -1,4 +1,4 @@
-package com.luczak.m.coreapp.utils;
+package com.luczak.m.coreapp.view.base;
 
 import android.content.Context;
 import android.support.annotation.Nullable;

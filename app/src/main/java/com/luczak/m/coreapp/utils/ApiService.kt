@@ -33,13 +33,10 @@ interface ApiService {
     @GET("posts/{id}")
     fun getPostDetail(@Path("id") id: Int): Observable<Post>
 
-    @GET("users")
-    fun getUserList(): Observable<List<User>>
-
     @GET("users/{userId}")
     fun getUserDetails(@Path(value = "userId") id: Int): Observable<User>
-//
-//    @GET("comments")
-//    fun detail(): Call<List<Comment?>?>?
+
+    @GET("comments")
+    fun getComments(): Observable<List<Comment>>
 
 }
